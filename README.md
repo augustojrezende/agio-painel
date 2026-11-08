@@ -24,6 +24,7 @@ O painel publica **só o nível do ágio**. Não mostra regressões, estudos de 
 
 | Arquivo | Papel |
 | --- | --- |
+| `favicon.svg` | Ícone da aba |
 | `index.html` | A página (HTML, CSS e JavaScript num só arquivo; gráfico com Chart.js 4.4.1 por CDN) |
 | `dados/agio.json` | Série gerada pelo exportador; não editar à mão |
 | `dados/episodios.json` | Notas de contexto dos dias de divergência já verificados (editado à mão, com fonte) |

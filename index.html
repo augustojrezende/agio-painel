@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ágio do dólar digital</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161615" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Ágio do dólar digital sobre o dólar oficial">
+<meta property="og:description" content="Ágio diário do USDT/BRL sobre a PTAX, na janela da PTAX e no fechamento. Indicador acadêmico.">
 <meta name="description" content="Ágio diário do USDT/BRL sobre a PTAX, medido na janela da PTAX e no fechamento. Indicador acadêmico.">
 <style>
 :root{
@@ -48,6 +53,8 @@ ol,ul{padding-left:20px}li{margin-bottom:6px}
 a{color:var(--janela)}
 footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
 #erro{display:none}
+a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -57,7 +64,7 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:v
 
   <p class="aviso"><strong>Indicador acadêmico.</strong> Mede um preço relativo e associações com o mercado. Não é previsão nem recomendação de investimento.</p>
 
-  <p id="erro" class="aviso"></p>
+  <p id="erro" class="aviso" role="status"></p>
 
   <div class="cards">
     <div class="card">
@@ -73,19 +80,20 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:v
 
   <h2>A série</h2>
   <div class="barra" role="group" aria-label="Período">
-    <button data-meses="3">3 meses</button>
-    <button data-meses="12" aria-pressed="true">1 ano</button>
-    <button data-meses="36">3 anos</button>
-    <button data-meses="0">Tudo</button>
+    <button type="button" data-meses="3" aria-pressed="false">3 meses</button>
+    <button type="button" data-meses="12" aria-pressed="true">1 ano</button>
+    <button type="button" data-meses="36" aria-pressed="false">3 anos</button>
+    <button type="button" data-meses="0" aria-pressed="false">Tudo</button>
   </div>
-  <div class="grafico"><canvas id="grafico" aria-label="Ágio diário na janela da PTAX e no fechamento"></canvas></div>
+  <div class="grafico"><canvas id="grafico" role="img" aria-label="Gráfico de linhas do ágio diário na janela da PTAX e no fechamento"></canvas></div>
   <p class="nota">Ágio em % sobre a PTAX de venda do mesmo dia. Linha azul: preço médio do USDT na janela em que a PTAX é apurada. Linha laranja: preço do USDT às 21h (00:00 UTC), horário usado pela maioria das bases de criptoativos.</p>
 
   <h2>Quando o horário muda a leitura</h2>
   <p>Os dias em que as duas medidas mais divergiram. Nos casos já verificados, a notícia saiu depois da janela da PTAX: o fechamento já refletia o choque, e a referência oficial ainda não.</p>
   <div class="tabela">
     <table>
-      <thead><tr><th>Data</th><th class="n">Janela PTAX</th><th class="n">Fechamento</th><th class="n">Diferença</th></tr></thead>
+      <caption class="sr">Dias de maior diferença entre o ágio na janela da PTAX e no fechamento</caption>
+      <thead><tr><th scope="col">Data</th><th scope="col" class="n">Janela PTAX</th><th scope="col" class="n">Fechamento</th><th scope="col" class="n">Diferença</th></tr></thead>
       <tbody id="divergencias"></tbody>
     </table>
   </div>
@@ -209,6 +217,8 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:v
       grafico.data.datasets[0].data = parte.map(function (p) { return p.j; });
       grafico.data.datasets[1].data = parte.map(function (p) { return p.f; });
       grafico.update();
+      document.getElementById("grafico").setAttribute("aria-label", "Gráfico de linhas do ágio diário, de " +
+        fmtData(parte[0].d) + " a " + fmtData(parte[parte.length - 1].d) + ", na janela da PTAX e no fechamento. Os valores dos dias de maior diferença estão na tabela abaixo.");
     }
 
     document.querySelectorAll(".barra button").forEach(function (b) {
