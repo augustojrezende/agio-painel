@@ -53,6 +53,21 @@ ol,ul{padding-left:20px}li{margin-bottom:6px}
 a{color:var(--janela)}
 footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
 #erro{display:none}
+.basico{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:8px}
+.basico .card h3{font-size:.95rem;margin:0 0 6px}
+.basico .card p{font-size:.92rem;margin:0}
+.exemplo{font-variant-numeric:tabular-nums;background:var(--aviso-bg);border-radius:6px;padding:8px 10px;margin-top:8px;font-size:.9rem}
+.leitura{font-size:1rem;margin:12px 0 0}
+.linha-tempo{list-style:none;padding:0;margin:12px 0;border-left:2px solid var(--line)}
+.linha-tempo li{position:relative;padding:0 0 14px 18px;margin:0}
+.linha-tempo li::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.linha-tempo li.j::before{background:var(--janela)}
+.linha-tempo li.f::before{background:var(--fech)}
+.linha-tempo .hora{font-weight:600;font-variant-numeric:tabular-nums}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:600}
+summary:focus-visible{outline:2px solid var(--janela);outline-offset:2px}
+dl{margin:10px 0 0}dt{font-weight:600;margin-top:10px}dd{margin:2px 0 0}
 a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
@@ -64,7 +79,26 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-off
 
   <p class="aviso"><strong>Indicador acadêmico.</strong> Mede um preço relativo e associações com o mercado. Não é previsão nem recomendação de investimento.</p>
 
+  <h2>Em 1 minuto</h2>
+  <div class="basico">
+    <div class="card">
+      <h3>O dólar digital (USDT)</h3>
+      <p>Uma <em>stablecoin</em>: criptomoeda emitida pela empresa Tether para valer sempre US$ 1. No Brasil, é comprada com reais em corretoras de criptoativos, 24 horas por dia.</p>
+    </div>
+    <div class="card">
+      <h3>O dólar oficial (PTAX)</h3>
+      <p>A cotação de referência do Banco Central. Sai da média das taxas que o BC consulta nos bancos em quatro momentos, entre 10h e 13h de Brasília. Só existe em dias úteis.</p>
+    </div>
+    <div class="card">
+      <h3>O ágio</h3>
+      <p>Quanto o USDT custa em reais acima (ágio) ou abaixo (deságio) da PTAX, em %.</p>
+      <p class="exemplo">USDT a R$ 5,45 e PTAX a R$ 5,42<br>5,45 ÷ 5,42 − 1 = <strong>+0,55%</strong></p>
+    </div>
+  </div>
+
   <p id="erro" class="aviso" role="status"></p>
+
+  <h2>O ágio agora</h2>
 
   <div class="cards">
     <div class="card">
@@ -76,6 +110,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-off
       <div class="val" id="v-fech">–</div>
     </div>
   </div>
+  <p class="leitura" id="leitura"></p>
   <p class="atual" id="atual"></p>
 
   <h2>A série</h2>
@@ -88,7 +123,17 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-off
   <div class="grafico"><canvas id="grafico" role="img" aria-label="Gráfico de linhas do ágio diário na janela da PTAX e no fechamento"></canvas></div>
   <p class="nota">Ágio em % sobre a PTAX de venda do mesmo dia. Linha azul: preço médio do USDT na janela em que a PTAX é apurada. Linha laranja: preço do USDT às 21h (00:00 UTC), horário usado pela maioria das bases de criptoativos.</p>
 
-  <h2>Quando o horário muda a leitura</h2>
+  <h2>Por que dois horários</h2>
+  <p>O dólar oficial é apurado entre 10h e 13h. O USDT é negociado o dia todo. Se o preço do USDT for medido em outro horário, a comparação mistura notícias que a PTAX do dia ainda não viu. Foi o que aconteceu em 09/04/2025:</p>
+  <ol class="linha-tempo">
+    <li class="j"><span class="hora">10h–13h</span> · O BC apura a PTAX. Na mesma janela, o USDT custa quase o mesmo que o dólar oficial: ágio de <strong>−0,04%</strong>.</li>
+    <li><span class="hora">≈14h</span> · Os EUA anunciam uma pausa de 90 dias nas tarifas. O dólar cai frente ao real.</li>
+    <li><span class="hora">Tarde e noite</span> · O USDT acompanha a queda. A PTAX daquele dia já está fixada e não muda.</li>
+    <li class="f"><span class="hora">21h</span> · No fechamento, o USDT está bem abaixo da PTAX do dia: deságio de <strong>−3,51%</strong>.</li>
+  </ol>
+  <p>Os dois números estão certos, mas medem coisas diferentes. O de 21h compara um preço que já reflete a notícia com uma referência anterior a ela. O deságio grande vem dessa defasagem, não de uma diferença entre os dois mercados no mesmo momento. Por isso o trabalho mede o ágio na janela da PTAX. O fechamento fica no painel para comparação, porque é o horário que a maioria das bases de criptoativos usa.</p>
+
+  <h3>Quando o horário muda a leitura</h3>
   <p>Os dias em que as duas medidas mais divergiram. Nos casos já verificados, a notícia saiu depois da janela da PTAX: o fechamento já refletia o choque, e a referência oficial ainda não.</p>
   <div class="tabela">
     <table>
@@ -106,6 +151,30 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-off
     <li><strong>Fechamento:</strong> a mesma conta com o candle diário que fecha às 21h, para comparação.</li>
     <li>Atualização semanal. Código, dados derivados, diário de decisões e pré-registro no <a href="https://github.com/augustojrezende/agio-stablecoin">repositório do projeto</a>.</li>
   </ol>
+
+  <h2>O que este painel não diz</h2>
+  <ul>
+    <li><strong>Não diz o que causa o ágio.</strong> O trabalho mede associações, por exemplo com o dólar e com o medo nos mercados globais, não causas.</li>
+    <li><strong>Não é previsão.</strong> O ágio de hoje não indica para onde vai o dólar.</li>
+    <li><strong>Ágio não é lucro garantido.</strong> Comprar num mercado e vender no outro tem custos (taxas, spread das corretoras, IOF) e regras de câmbio. Por isso o ágio pode durar sem que alguém consiga ganhar com ele.</li>
+    <li><strong>Não é o mercado todo.</strong> A série cobre o USDT em duas corretoras, Binance e Mercado Bitcoin.</li>
+  </ul>
+
+  <h2>Glossário</h2>
+  <details>
+    <summary>Termos usados nesta página</summary>
+    <dl>
+      <dt>Stablecoin</dt><dd>Criptomoeda feita para manter valor fixo em relação a uma moeda, em geral o dólar, com reservas que o emissor diz manter.</dd>
+      <dt>USDT</dt><dd>A maior stablecoin em dólar, emitida pela Tether. Aqui, cotada em reais (USDT/BRL).</dd>
+      <dt>PTAX de venda</dt><dd>Taxa de câmbio de referência do Banco Central: média de quatro consultas aos bancos, às 10h, 11h, 12h e 13h. Usada em contratos e na contabilidade.</dd>
+      <dt>Ágio e deságio</dt><dd>Diferença percentual entre o preço do USDT em reais e a PTAX. Positiva é ágio; negativa é deságio.</dd>
+      <dt>Ponto percentual (p.p.)</dt><dd>Diferença entre duas porcentagens. Passar de 0,30% para 0,50% é subir 0,2 p.p.</dd>
+      <dt>VWAP</dt><dd>Preço médio ponderado pelo volume: horas com mais negócios pesam mais na média.</dd>
+      <dt>Candle</dt><dd>Resumo dos negócios de um intervalo (1 hora ou 1 dia): preço de abertura, máximo, mínimo, fechamento e volume.</dd>
+      <dt>00:00 UTC</dt><dd>Meia-noite no horário universal, 21h em Brasília. É quando fecha o "dia" na maioria das bases de criptoativos.</dd>
+      <dt>Arbitragem</dt><dd>Comprar onde está mais barato e vender onde está mais caro. Se fosse livre e sem custo, o ágio tenderia a zero.</dd>
+    </dl>
+  </details>
 
   <footer>
     <p>Rezende, Augusto. <em>O ágio da stablecoin em reais: reação a choques domésticos e externos no Brasil (2020–2026)</em>. Trabalho de Conclusão de Curso em Ciências Econômicas.</p>
@@ -140,6 +209,27 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-off
     .then(function (res) { desenhar(res[0], res[1]); })
     .catch(function () { erro("A série ainda não foi publicada. Ela aparece aqui depois da primeira exportação."); });
 
+  // Frase de leitura: sinal do último valor na janela e posição frente aos
+  // ~63 dias úteis anteriores (3 meses). Comparação descritiva, sem teste.
+  function leitura(serie, ultimo) {
+    if (!ultimo) return "";
+    var v = ultimo.j;
+    var abs = Math.abs(v).toFixed(2).replace(".", ",");
+    var frase = Math.abs(v) < 0.05
+      ? "Na janela da PTAX, o dólar digital custa praticamente o mesmo que o oficial"
+      : "Na janela da PTAX, o dólar digital está " + abs + "% " + (v > 0 ? "mais caro" : "mais barato") + " que o oficial";
+    var antes = serie.filter(function (p) { return p.d < ultimo.d && p.j !== null; })
+                     .slice(-63).map(function (p) { return p.j; }).sort(function (a, b) { return a - b; });
+    if (antes.length < 40) return frase + ".";
+    var q = function (x) { return antes[Math.floor(x * (antes.length - 1))]; };
+    var p10 = q(0.10), p90 = q(0.90);
+    var faixa = " (entre " + fmtPct(p10) + " e " + fmtPct(p90) + " em 8 de cada 10 dias)";
+    var pos = v < p10 ? "abaixo do que foi comum nos últimos 3 meses" :
+              v > p90 ? "acima do que foi comum nos últimos 3 meses" :
+                        "dentro do que foi comum nos últimos 3 meses";
+    return frase + ", " + pos + faixa + ".";
+  }
+
   function desenhar(dados, episodios) {
     var serie = dados.serie;
     var ultimaJ = null, ultimaF = null;
@@ -150,6 +240,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-off
     document.getElementById("v-janela").textContent = ultimaJ ? fmtPct(ultimaJ.j) : "–";
     document.getElementById("v-fech").textContent = ultimaF ? fmtPct(ultimaF.f) : "–";
     var ref = ultimaJ || ultimaF;
+    document.getElementById("leitura").textContent = leitura(serie, ultimaJ);
     document.getElementById("atual").textContent =
       "Último dia útil: " + (ref ? fmtData(ref.d) : "–") +
       " · exportado em " + fmtData(dados.gerado_em.slice(0, 10)) + " · " + dados.dias + " dias na série";
