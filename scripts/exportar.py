@@ -12,7 +12,7 @@ Grava `dados/agio.json` neste repositório, só com o ágio diário em %
 
 Uso:
     python3 scripts/exportar.py                  # só gera o JSON
-    python3 scripts/exportar.py --publicar       # gera, faz commit e push se mudou
+    python3 scripts/exportar.py --publicar       # atualiza o clone, gera, faz commit e push se mudou
     python3 scripts/exportar.py --origem ~/Projetos/agio-stablecoin
 
 Por padrão, a origem é a pasta `agio-stablecoin` ao lado desta.
@@ -77,6 +77,14 @@ def git(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", str(RAIZ), *args], capture_output=True, text=True)
 
 
+def atualizar_clone() -> None:
+    """Traz as mudanças do GitHub antes de gerar o JSON, para o push não ser recusado."""
+    r = git("pull", "--ff-only", "--quiet")
+    if r.returncode != 0:
+        sys.exit(f"Não consegui atualizar o clone (git pull):\n{r.stderr}\n"
+                 "Resolva à mão com `git status` e `git pull` antes de publicar.")
+
+
 def publicar(ultima_data: str) -> None:
     git("add", "dados/agio.json")
     if git("diff", "--cached", "--quiet").returncode == 0:
@@ -99,6 +107,9 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--saida", type=Path, default=SAIDA)
     p.add_argument("--publicar", action="store_true", help="commit e push se o JSON mudou")
     a = p.parse_args(argv)
+
+    if a.publicar:
+        atualizar_clone()
 
     tratado = a.origem.expanduser() / "dados" / "tratado"
     try:
