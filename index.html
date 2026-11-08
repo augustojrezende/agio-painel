@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ágio do dólar digital</title>
+<meta name="description" content="Ágio diário do USDT/BRL sobre a PTAX, medido na janela da PTAX e no fechamento. Indicador acadêmico.">
+<style>
+:root{
+  --bg:#fbfaf7;--fg:#1d1d1b;--muted:#6b6a65;--line:#e4e1d9;--card:#ffffff;
+  --janela:#1f5f8b;--fech:#c2603a;--aviso-bg:#f3efe4;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#161615;--fg:#ecebe6;--muted:#a3a19a;--line:#2f2e2b;--card:#1f1e1c;
+        --janela:#6fb1de;--fech:#e8946f;--aviso-bg:#26241f;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:920px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:1.6rem;line-height:1.25;margin:0 0 6px}
+h2{font-size:1.1rem;margin:36px 0 10px}
+p{margin:0 0 12px}
+.sub{color:var(--muted);margin-bottom:20px}
+.aviso{background:var(--aviso-bg);border-left:3px solid var(--muted);padding:10px 14px;
+  font-size:.92rem;margin:0 0 24px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card .rot{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.card .val{font-size:2rem;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.ponto{width:10px;height:10px;border-radius:50%;display:inline-block}
+.atual{font-size:.85rem;color:var(--muted);margin-top:10px}
+.barra{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.barra button{border:1px solid var(--line);background:var(--card);color:var(--fg);
+  border-radius:999px;padding:4px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.barra button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.grafico{position:relative;height:340px;background:var(--card);border:1px solid var(--line);
+  border-radius:10px;padding:10px}
+table{width:100%;border-collapse:collapse;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.82rem}
+td.n{text-align:right;white-space:nowrap}th.n{text-align:right}
+.tabela{overflow-x:auto}
+tr.com-nota td{border-bottom:none}
+tr.nota-linha td{color:var(--muted);font-size:.86rem;padding-top:0}
+.nota{color:var(--muted);font-size:.85rem}
+ol,ul{padding-left:20px}li{margin-bottom:6px}
+a{color:var(--janela)}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}
+#erro{display:none}
+</style>
+</head>
+<body>
+<main>
+  <h1>Ágio do dólar digital sobre o dólar oficial</h1>
+  <p class="sub">Quanto o USDT (dólar digital) custa em reais acima ou abaixo da PTAX, a cotação de referência do Banco Central. Dados diários desde outubro de 2020.</p>
+
+  <p class="aviso"><strong>Indicador acadêmico.</strong> Mede um preço relativo e associações com o mercado. Não é previsão nem recomendação de investimento.</p>
+
+  <p id="erro" class="aviso"></p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="rot"><span class="ponto" style="background:var(--janela)"></span>Na janela da PTAX (10h–13h)</div>
+      <div class="val" id="v-janela">–</div>
+    </div>
+    <div class="card">
+      <div class="rot"><span class="ponto" style="background:var(--fech)"></span>No fechamento (21h)</div>
+      <div class="val" id="v-fech">–</div>
+    </div>
+  </div>
+  <p class="atual" id="atual"></p>
+
+  <h2>A série</h2>
+  <div class="barra" role="group" aria-label="Período">
+    <button data-meses="3">3 meses</button>
+    <button data-meses="12" aria-pressed="true">1 ano</button>
+    <button data-meses="36">3 anos</button>
+    <button data-meses="0">Tudo</button>
+  </div>
+  <div class="grafico"><canvas id="grafico" aria-label="Ágio diário na janela da PTAX e no fechamento"></canvas></div>
+  <p class="nota">Ágio em % sobre a PTAX de venda do mesmo dia. Linha azul: preço médio do USDT na janela em que a PTAX é apurada. Linha laranja: preço do USDT às 21h (00:00 UTC), horário usado pela maioria das bases de criptoativos.</p>
+
+  <h2>Quando o horário muda a leitura</h2>
+  <p>Os dias em que as duas medidas mais divergiram. Nos casos já verificados, a notícia saiu depois da janela da PTAX: o fechamento já refletia o choque, e a referência oficial ainda não.</p>
+  <div class="tabela">
+    <table>
+      <thead><tr><th>Data</th><th class="n">Janela PTAX</th><th class="n">Fechamento</th><th class="n">Diferença</th></tr></thead>
+      <tbody id="divergencias"></tbody>
+    </table>
+  </div>
+
+  <h2>Como é calculado</h2>
+  <ol>
+    <li><strong>Preço do USDT em reais</strong> na Binance e no Mercado Bitcoin, pela média ponderada por volume (VWAP) dos candles de 1 hora entre 10h e 13h de Brasília.</li>
+    <li><strong>Referência:</strong> PTAX de venda do Banco Central do mesmo dia útil.</li>
+    <li><strong>Ágio do dia</strong> = preço do USDT ÷ PTAX − 1, consolidado entre as corretoras pelo volume.</li>
+    <li><strong>Fechamento:</strong> a mesma conta com o candle diário que fecha às 21h, para comparação.</li>
+    <li>Atualização semanal. Código, dados derivados, diário de decisões e pré-registro no <a href="https://github.com/augustojrezende/agio-stablecoin">repositório do projeto</a>.</li>
+  </ol>
+
+  <footer>
+    <p>Rezende, Augusto. <em>O ágio da stablecoin em reais: reação a choques domésticos e externos no Brasil (2020–2026)</em>. Trabalho de Conclusão de Curso em Ciências Econômicas.</p>
+    <p>Dados derivados de preços públicos da Binance e do Mercado Bitcoin e da PTAX do Banco Central. Série publicada sob <a href="LICENSE-DADOS.md">CC BY-NC-SA 4.0</a>; código sob licença MIT. Sem relação com as corretoras citadas.</p>
+  </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  var fmtPct = function (v) {
+    if (v === null || v === undefined || isNaN(v)) return "–";
+    return (v > 0 ? "+" : "") + v.toFixed(2).replace(".", ",").replace("-", "−") + "%";
+  };
+  var fmtData = function (iso) { var p = iso.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; };
+  var cor = function (nome) { return getComputedStyle(document.documentElement).getPropertyValue(nome).trim(); };
+
+  function erro(msg) {
+    var el = document.getElementById("erro");
+    el.textContent = msg; el.style.display = "block";
+  }
+
+  function carregar(url) {
+    return fetch(url, { cache: "no-cache" }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    });
+  }
+
+  Promise.all([carregar("dados/agio.json"), carregar("dados/episodios.json").catch(function () { return []; })])
+    .then(function (res) { desenhar(res[0], res[1]); })
+    .catch(function () { erro("A série ainda não foi publicada. Ela aparece aqui depois da primeira exportação."); });
+
+  function desenhar(dados, episodios) {
+    var serie = dados.serie;
+    var ultimaJ = null, ultimaF = null;
+    for (var i = serie.length - 1; i >= 0 && (ultimaJ === null || ultimaF === null); i--) {
+      if (ultimaJ === null && serie[i].j !== null) ultimaJ = serie[i];
+      if (ultimaF === null && serie[i].f !== null) ultimaF = serie[i];
+    }
+    document.getElementById("v-janela").textContent = ultimaJ ? fmtPct(ultimaJ.j) : "–";
+    document.getElementById("v-fech").textContent = ultimaF ? fmtPct(ultimaF.f) : "–";
+    var ref = ultimaJ || ultimaF;
+    document.getElementById("atual").textContent =
+      "Último dia útil: " + (ref ? fmtData(ref.d) : "–") +
+      " · exportado em " + fmtData(dados.gerado_em.slice(0, 10)) + " · " + dados.dias + " dias na série";
+
+    var notas = {};
+    (episodios || []).forEach(function (e) { notas[e.d] = e; });
+    var corpo = document.getElementById("divergencias");
+    dados.divergencias.forEach(function (p) {
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + fmtData(p.d) + "</td><td class='n'>" + fmtPct(p.j) +
+        "</td><td class='n'>" + fmtPct(p.f) + "</td><td class='n'>" + fmtPct(p.dif).replace("%", " p.p.") + "</td>";
+      corpo.appendChild(tr);
+      if (notas[p.d]) {
+        tr.className = "com-nota";
+        var nt = document.createElement("tr");
+        nt.className = "nota-linha";
+        var td = document.createElement("td");
+        td.colSpan = 4;
+        var b = document.createElement("strong");
+        b.textContent = notas[p.d].titulo + ". ";
+        td.appendChild(b);
+        td.appendChild(document.createTextNode(notas[p.d].nota));
+        nt.appendChild(td);
+        corpo.appendChild(nt);
+      }
+    });
+
+    var grafico = new Chart(document.getElementById("grafico"), {
+      type: "line",
+      data: { labels: [], datasets: [
+        { label: "Janela da PTAX", data: [], borderColor: cor("--janela"), backgroundColor: cor("--janela"),
+          borderWidth: 1.6, pointRadius: 0, spanGaps: false },
+        { label: "Fechamento (21h)", data: [], borderColor: cor("--fech"), backgroundColor: cor("--fech"),
+          borderWidth: 1.2, pointRadius: 0, spanGaps: false }
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { labels: { color: cor("--fg"), boxWidth: 12 } },
+          tooltip: { callbacks: {
+            title: function (it) { return fmtData(it[0].label); },
+            label: function (it) { return it.dataset.label + ": " + fmtPct(it.parsed.y); }
+          } }
+        },
+        scales: {
+          x: { ticks: { color: cor("--muted"), maxTicksLimit: window.innerWidth < 600 ? 4 : 8, maxRotation: 0,
+                 callback: function (v) { var d = this.getLabelForValue(v); return d.slice(5, 7) + "/" + d.slice(0, 4); } },
+               grid: { display: false } },
+          y: { ticks: { color: cor("--muted"), callback: function (v) { return fmtPct(v); } },
+               grid: { color: cor("--line") } }
+        }
+      }
+    });
+
+    function periodo(meses) {
+      var inicio = "";
+      if (meses > 0) {
+        var d = new Date(serie[serie.length - 1].d + "T12:00:00Z");
+        d.setUTCMonth(d.getUTCMonth() - meses);
+        inicio = d.toISOString().slice(0, 10);
+      }
+      var parte = serie.filter(function (p) { return p.d >= inicio; });
+      grafico.data.labels = parte.map(function (p) { return p.d; });
+      grafico.data.datasets[0].data = parte.map(function (p) { return p.j; });
+      grafico.data.datasets[1].data = parte.map(function (p) { return p.f; });
+      grafico.update();
+    }
+
+    document.querySelectorAll(".barra button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        document.querySelectorAll(".barra button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        periodo(parseInt(b.dataset.meses, 10));
+      });
+    });
+    periodo(12);
+  }
+})();
+</script>
+</body>
+</html>
