@@ -31,7 +31,7 @@ O painel publica **só o nível do ágio**. Não mostra regressões, estudos de 
 | `dados/agio.json` | Série gerada pelo exportador; não editar à mão |
 | `dados/episodios.json` | Notas de contexto dos dias de divergência já verificados (editado à mão, com fonte) |
 | `scripts/exportar.py` | Lê os CSVs do projeto de origem e grava `dados/agio.json` (só biblioteca padrão) |
-| `scripts/agendar_mac.sh` | Agenda a exportação semanal no Mac (segunda, 21h) |
+| `scripts/agendar_mac.sh` | Agenda a exportação no Mac: roda quando o ágio é recalculado, com reserva às terças 10h |
 | `tests/test_exportar.py` | Testes do exportador com dados sintéticos |
 
 ## Como usar
@@ -42,9 +42,11 @@ Pré-requisito: este repositório clonado **ao lado** do projeto de origem (`~/P
 cd ~/Projetos/agio-painel
 python3 scripts/exportar.py                # gera dados/agio.json
 python3 scripts/exportar.py --publicar     # gera, faz commit e push se mudou
-./scripts/agendar_mac.sh                   # agenda toda segunda às 21h (uma hora depois da coleta)
-python3 -m pytest -q tests                 # 5 testes, sem rede
+./scripts/agendar_mac.sh                   # roda sempre que a coleta recalcula o ágio
+python3 -m pytest -q tests                 # 8 testes, sem rede
 ```
+
+Com `--publicar`, o exportador atualiza o clone (`git pull`), espera os CSVs de origem ficarem 60 segundos sem mudar e só publica se houver dia novo.
 
 Para ver a página no próprio computador: `python3 -m http.server` e abrir `http://localhost:8000`.
 
