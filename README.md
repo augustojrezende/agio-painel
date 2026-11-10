@@ -5,7 +5,9 @@ Página pública com o ágio diário do USDT em reais sobre a PTAX, medido em do
 - **Janela da PTAX (10h–13h de Brasília):** a medida principal do TCC.
 - **Fechamento (21h, 00:00 UTC):** o horário das bases de criptoativos, para comparação.
 
-A página mostra o valor do último dia útil, a série desde outubro de 2020, os dias em que as duas medidas mais divergiram e a metodologia em cinco passos.
+**Acesse: [augustojrezende.github.io/agio-painel](https://augustojrezende.github.io/agio-painel/)**
+
+A página explica em um minuto o que são USDT, PTAX e ágio; mostra o valor do último dia útil com uma frase de leitura, a série desde outubro de 2020, por que os dois horários dão leituras diferentes (com o exemplo de 09/04/2025), os dias em que as duas medidas mais divergiram, a metodologia, o que o painel não diz e um glossário.
 
 Projeto de origem (código, pré-registro e resultados): [augustojrezende/agio-stablecoin](https://github.com/augustojrezende/agio-stablecoin).
 
