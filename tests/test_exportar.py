@@ -59,3 +59,33 @@ def test_origem_ausente_avisa(tmp_path):
     with pytest.raises(SystemExit) as e:
         exportar.main(["--origem", str(tmp_path / "nada"), "--saida", str(tmp_path / "a.json")])
     assert "agio calcular" in str(e.value)
+
+
+def test_sem_dia_novo_nao_regrava(tmp_path):
+    saida = tmp_path / "agio.json"
+    origem = _origem(tmp_path)
+    exportar.main(["--origem", str(origem), "--saida", str(saida)])
+    antes = saida.read_text(encoding="utf-8")
+    exportar.main(["--origem", str(origem), "--saida", str(saida)])
+    assert saida.read_text(encoding="utf-8") == antes  # nem a hora de exportação muda
+
+
+def test_dia_novo_regrava(tmp_path):
+    saida = tmp_path / "agio.json"
+    origem = _origem(tmp_path)
+    exportar.main(["--origem", str(origem), "--saida", str(saida)])
+    f = origem / "dados" / "tratado" / "agio_diario.csv"
+    f.write_text(f.read_text() + "2025-04-14,0,0.30,2\n", encoding="utf-8")
+    exportar.main(["--origem", str(origem), "--saida", str(saida)])
+    assert json.loads(saida.read_text(encoding="utf-8"))["ultima_data"] == "2025-04-14"
+
+
+def test_espera_arquivo_parar_de_mudar(tmp_path):
+    import os, time
+    f = tmp_path / "a.csv"
+    f.write_text("x")
+    agora = time.time()
+    os.utime(f, (agora - 10, agora - 10))
+    assert exportar.esperar_estabilizar([f], segundos=5, maximo=1, passo=0.1)
+    os.utime(f, (agora, agora))
+    assert not exportar.esperar_estabilizar([f], segundos=5, maximo=0.3, passo=0.1)

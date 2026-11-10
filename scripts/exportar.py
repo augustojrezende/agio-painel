@@ -24,6 +24,7 @@ import csv
 import json
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -32,6 +33,8 @@ ORIGEM_PADRAO = RAIZ.parent / "agio-stablecoin"
 SAIDA = RAIZ / "dados" / "agio.json"
 N_DIVERGENCIAS = 10   # dias com maior diferença entre as duas medidas
 CASAS = 4             # casas decimais do ágio em %
+ESPERA_PADRAO = 60    # segundos sem mudança nos CSVs antes de ler (com --publicar)
+ESPERA_MAXIMA = 1800  # desiste depois de 30 minutos esperando
 
 
 def ler_serie(caminho: Path) -> dict[str, float]:
@@ -73,6 +76,34 @@ def montar(janela: dict[str, float], fechamento: dict[str, float]) -> dict:
     }
 
 
+def esperar_estabilizar(arquivos: list[Path], segundos: float,
+                        maximo: float = ESPERA_MAXIMA, passo: float = 5) -> bool:
+    """Espera os arquivos ficarem `segundos` sem mudar (a coleta pode estar gravando).
+
+    Devolve False se passar de `maximo` sem estabilizar.
+    """
+    inicio = time.time()
+    while True:
+        existentes = [f for f in arquivos if f.exists()]
+        if existentes:
+            idade = time.time() - max(f.stat().st_mtime for f in existentes)
+            if idade >= segundos:
+                return True
+        if time.time() - inicio > maximo:
+            return False
+        time.sleep(passo)
+
+
+def mesmo_conteudo(saida: Path, dados: dict) -> bool:
+    """True se o JSON já publicado tem a mesma série (ignora a hora da exportação)."""
+    try:
+        atual = json.loads(saida.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        return False
+    chaves = ("serie", "divergencias")
+    return all(atual.get(k) == dados.get(k) for k in chaves)
+
+
 def git(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", str(RAIZ), *args], capture_output=True, text=True)
 
@@ -106,12 +137,20 @@ def main(argv: list[str] | None = None) -> None:
                    help="pasta do projeto agio-stablecoin")
     p.add_argument("--saida", type=Path, default=SAIDA)
     p.add_argument("--publicar", action="store_true", help="commit e push se o JSON mudou")
+    p.add_argument("--esperar", type=float, default=None,
+                   help=f"segundos sem mudança nos CSVs antes de ler "
+                        f"(padrão: {ESPERA_PADRAO} com --publicar, 0 sem)")
     a = p.parse_args(argv)
 
     if a.publicar:
         atualizar_clone()
 
     tratado = a.origem.expanduser() / "dados" / "tratado"
+    fontes = [tratado / "agio_diario.csv", tratado / "agio_fechamento_diario.csv"]
+    espera = a.esperar if a.esperar is not None else (ESPERA_PADRAO if a.publicar else 0)
+    if espera and not esperar_estabilizar(fontes, espera):
+        sys.exit("Os CSVs de origem não pararam de mudar em 30 minutos; tente de novo depois.")
+
     try:
         janela = ler_serie(tratado / "agio_diario.csv")
         fechamento = ler_serie(tratado / "agio_fechamento_diario.csv")
@@ -119,6 +158,9 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(f"Arquivo não encontrado: {e.filename}\nRode `agio calcular` no projeto de origem.")
 
     dados = montar(janela, fechamento)
+    if mesmo_conteudo(a.saida, dados):
+        print(f"Sem dia novo (último {dados['ultima_data']}); nada a fazer.")
+        return
     a.saida.parent.mkdir(parents=True, exist_ok=True)
     a.saida.write_text(json.dumps(dados, ensure_ascii=False, separators=(",", ":")) + "\n",
                        encoding="utf-8")
