@@ -145,7 +145,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-off
 
   <h2>Como é calculado</h2>
   <ol>
-    <li><strong>Preço do USDT em reais</strong> na Binance e no Mercado Bitcoin, pela média ponderada por volume (VWAP) dos candles de 1 hora entre 10h e 13h de Brasília.</li>
+    <li><strong>Preço do USDT em reais</strong> na Binance (e no Mercado Bitcoin de 11/03/2023 a 30/10/2026, até a API dele passar a bloquear o acesso), pela média ponderada por volume (VWAP) dos candles de 1 hora entre 10h e 13h de Brasília. Nos dias com as duas corretoras, o resultado praticamente não muda (correlação de 0,999).</li>
     <li><strong>Referência:</strong> PTAX de venda do Banco Central do mesmo dia útil.</li>
     <li><strong>Ágio do dia</strong> = preço do USDT ÷ PTAX − 1, consolidado entre as corretoras pelo volume.</li>
     <li><strong>Fechamento:</strong> a mesma conta com o candle diário que fecha às 21h, para comparação.</li>
@@ -157,7 +157,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--janela);outline-off
     <li><strong>Não diz o que causa o ágio.</strong> O trabalho mede associações, por exemplo com o dólar e com o medo nos mercados globais, não causas.</li>
     <li><strong>Não é previsão.</strong> O ágio de hoje não indica para onde vai o dólar.</li>
     <li><strong>Ágio não é lucro garantido.</strong> Comprar num mercado e vender no outro tem custos (taxas, spread das corretoras, IOF) e regras de câmbio. Por isso o ágio pode durar sem que alguém consiga ganhar com ele.</li>
-    <li><strong>Não é o mercado todo.</strong> A série cobre o USDT em duas corretoras, Binance e Mercado Bitcoin.</li>
+    <li><strong>Não é o mercado todo.</strong> A série cobre o USDT na Binance, que concentra o volume, e no Mercado Bitcoin até 30/10/2026.</li>
   </ul>
 
   <h2>Glossário</h2>
